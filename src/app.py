@@ -26,8 +26,6 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
-wishlist=[]
-cart=[]
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -50,17 +48,33 @@ def handle_hello():
 
 @app.route('/wishlist', methods=['GET'])
 def get_wishlist():
-    json_wishlist= jsonify(wishlist)
-    return json_wishlist
+    wishlist = Wishlist.query.all()
+    wishlist = list(
+        map(lambda index: index.serialize(), wishlist)
+    )
+    response_body= jsonify(wishlist)
+    return response_body, 200
 
 @app.route('/wishlist', methods=['POST'])
 def add_to_wishlist():
-    request_body=request.data
-    wishlist.append(request_body)
-    print("Incoming request with the following body", request_body)
-    return jsonify(wishlist)
+    id = request.json.get("id")
+    name = request.json.get("name")
+    price = request.json.get("price")
+    description = request.json.get("description")
+    picture = request.json.get("picture")
+    item = Wishlist(id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
 
-
+    response= {
+        'message': 'item added successfully',
+        'id': id,
+        'name': name,
+        'price': price,
+        'description': description,
+        'picture': picture
+    }
+    db.session.add(item)
+    db.session.commit()
+    return jsonify(response), 200
 
 
 # this only runs if `$ python src/app.py` is executed
