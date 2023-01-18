@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Wishlist
 #from models import Person
 
 app = Flask(__name__)
@@ -25,6 +25,7 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -44,6 +45,37 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/wishlist', methods=['GET'])
+def get_wishlist():
+    wishlist = Wishlist.query.all()
+    wishlist = list(
+        map(lambda index: index.serialize(), wishlist)
+    )
+    response_body= jsonify(wishlist)
+    return response_body, 200
+
+@app.route('/wishlist', methods=['POST'])
+def add_to_wishlist():
+    id = request.json.get("id")
+    name = request.json.get("name")
+    price = request.json.get("price")
+    description = request.json.get("description")
+    picture = request.json.get("picture")
+    item = Wishlist(id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
+
+    response= {
+        'message': 'item added successfully',
+        'id': id,
+        'name': name,
+        'price': price,
+        'description': description,
+        'picture': picture
+    }
+    db.session.add(item)
+    db.session.commit()
+    return jsonify(response), 200
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
