@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Wishlist
 #from models import Person
 
 app = Flask(__name__)
@@ -25,6 +25,9 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+
+wishlist=[]
+cart=[]
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -44,6 +47,21 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/wishlist', methods=['GET'])
+def get_wishlist():
+    json_wishlist= jsonify(wishlist)
+    return json_wishlist
+
+@app.route('/wishlist', methods=['POST'])
+def add_to_wishlist():
+    request_body=request.data
+    wishlist.append(request_body)
+    print("Incoming request with the following body", request_body)
+    return jsonify(wishlist)
+
+
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
