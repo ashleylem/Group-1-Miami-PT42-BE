@@ -5,7 +5,7 @@ import os
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, Wishlist
@@ -25,7 +25,6 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
-
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -64,17 +63,12 @@ def add_to_wishlist():
     picture = request.json.get("picture")
     item = Wishlist(id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
 
-    response= {
-        'message': 'item added successfully',
-        'id': id,
-        'name': name,
-        'price': price,
-        'description': description,
-        'picture': picture
-    }
+    response= request.json
+
     db.session.add(item)
     db.session.commit()
-    return jsonify(response), 200
+ 
+    return jsonify(response) , 200
 
 
 # this only runs if `$ python src/app.py` is executed
