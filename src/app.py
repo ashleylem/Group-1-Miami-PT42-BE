@@ -2,21 +2,25 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for, flash
+from flask import Flask, request, jsonify, url_for, flash, send_from_directory, send_file
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS, cross_origin
-from utils import APIException, generate_sitemap
+from utils import APIException, generate_sitemap, file_valid
 from admin import setup_admin
-from models import db, User, Wishlist
+from models import db, User, Wishlist,VideoUploads, Purchased, Cart
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from  werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+from werkzeug.utils import secure_filename
 
 #from models import Person
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
+UPLOADS_FOLDER= 'src/Uploads'
+app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
+
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -71,7 +75,7 @@ def create_token():
         # the user was not found on the database
         return jsonify({"msg": "Bad username or password"}), 401
     else:
-        return jsonify({ "token": access_token, "user_id": user.id })
+        return jsonify({ "token": access_token, "userId": user.id })
     
     return "You're logged in"
     
@@ -108,8 +112,9 @@ def get_wishlist():
     return response_body, 200
 
 @app.route('/wishlist', methods=['POST'])
+@jwt_required()
 def add_to_wishlist():
-  
+    userID= request.json.get('userId')
     id = request.json.get("id")
     name = request.json.get("name")
     price = request.json.get("price")
@@ -121,10 +126,28 @@ def add_to_wishlist():
         return {"msg": "Already added"}
 
     response= request.json
-    item = Wishlist(id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
+    item = Wishlist(user_id= userID, product_id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
     db.session.add(item)
     db.session.commit()
     return jsonify(response) , 200
+
+@app.route('/wishlist/<userId>', methods=['GET'])
+@jwt_required()
+def get_user_wishlist(userId):
+    items= Wishlist.query.filter_by(user_id=userId).all()
+    items= list(
+        map(lambda index: index.serialize(), items)
+    )
+    return jsonify(items)
+
+@app.route('/wishlist/<user_id>/<int:product_id>', methods=['DELETE'])
+@jwt_required()
+def delete_item(user_id, product_id):
+    item= Wishlist.query.filter_by(user_id=user_id, product_id=product_id).first()
+    db.session.delete(item)
+    db.session.commit()
+    return {"msg": "item deleted"}
+
 
 @app.route('/wishlist/delete', methods=['DELETE'])
 def clear_wishlist():
@@ -133,9 +156,151 @@ def clear_wishlist():
         db.session.delete(item)
     db.session.commit()
     return "deleted"
+@app.route('/uploads/videos', methods=['GET'])
+def get_videos():
+    videos= VideoUploads.query.all()
+    videos= list(
+        map(lambda index: index.serialize(), videos)
+    )
+    response_body=jsonify(videos)
 
+    return response_body, 200
+    
+@app.route('/uploads/videos', methods=['POST'])
+def upload_video():
+    user_id=request.form.get('userId')
+    product_id=request.form.get('product_id')
+    video_id=uuid.uuid4() 
+    name=request.form.get('name')
+    description=request.form.get('description')
+    filename=request.files.get('filename')
+    picture=request.form.get('picture')
+    
+
+    if 'file' not in request.files:
+        flash('No file part in request')
+        
+    file =request.files['file']
+    
+    if file and file_valid(file.filename):
+        filename=secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOADS_FOLDER'], filename))
+        newUpload= VideoUploads(user_id=user_id, product_id=product_id, video_id=video_id, video_name=name, video_description=description, video_path=os.path.abspath(UPLOADS_FOLDER), filename=filename, picture_url=picture )
+        db.session.add(newUpload)
+        db.session.commit()
+    return "successfully added"
+
+@app.route('/uploads/videosInfo/<user_id>', methods=['GET'])
+def get_user_videosInfo(user_id):
+    videos= VideoUploads.query.filter_by(user_id=user_id).all()
+    videosInfo= list(
+        map(lambda item: item.serialize(), videos)
+    )
+    # for video in videos:
+    #     return send_from_directory(video.video_path, video.filename, mimetype='video/mp4')
+
+    response_body=jsonify(videosInfo)
+    return response_body, 200 
+
+@app.route('/uploads/videos/<video_id>', methods=['GET'])
+def get_user_videos(video_id):
+    video= VideoUploads.query.filter_by(video_id=video_id).first()
+    videoI= video.serialize()
+    filename= videoI.get('filename')
+    path=videoI.get('video_path')
+
+    return send_from_directory(path, filename, mimetype='video/mp4'), 200
+
+    
+
+@app.route('/videos/delete', methods=['DELETE'])
+def delete_video():
+    videos=VideoUploads.query.all()
+    for video in videos:
+        db.session.delete(video)
+        os.remove(os.path.join(app.config['UPLOADS_FOLDER'], video.filename))
+    db.session.commit()
+    return "deleted"
+
+
+@app.route('/Cart', methods=['POST'])
+@jwt_required()
+def add_to_cart():
+    userID= request.json.get('userId')
+    id = request.json.get("id")
+    name = request.json.get("name")
+    price = request.json.get("price")
+    description = request.json.get("description")
+    picture = request.json.get("picture")
+
+    existing_item= Cart.query.filter_by(item_name=name).first()
+    if existing_item:
+        return {"msg": "Already added"}
+
+    response= request.json
+    item = Cart(user_id= userID, product_id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
+    db.session.add(item)
+    db.session.commit()
+    return jsonify(response) , 200
+
+@app.route('/Cart/<userId>', methods=['GET'])
+@jwt_required()
+def get_user_cart(userId):
+    items= Cart.query.filter_by(user_id=userId).all()
+    items= list(
+        map(lambda index: index.serialize(), items)
+    )
+    return jsonify(items)
+
+@app.route('/Cart/<user_id>/<int:product_id>', methods=['DELETE'])
+@jwt_required()
+def delete_cart_item(user_id, product_id):
+    item= Cart.query.filter_by(user_id=user_id, product_id=product_id).first()
+    db.session.delete(item)
+    db.session.commit()
+    return {"msg": "item deleted"}
+
+
+@app.route('/Cart/<user_id>/delete', methods=['DELETE'])
+@jwt_required()
+def clear_user_cart(user_id):
+    items =Cart.query.filter_by(user_id=user_id).all()
+    for item in items:
+        db.session.delete(item)
+    db.session.commit()
+    return "deleted"
+
+
+@app.route('/purchased', methods=['POST'])
+@jwt_required()
+def purchased_items():
+    response= request.json
+    userID= request.json.get('userId')
+    id = request.json.get("product_id")
+    name = request.json.get("name")
+    price = request.json.get("price")
+    description = request.json.get("description")
+    picture = request.json.get("picture")
+    
+    newitem = Purchased(user_id= userID, product_id =id, item_name= name, item_price= price, item_description= description, picture_url= picture)
+    db.session.add(newitem)
+    db.session.commit()
+
+
+    return response , 200
+
+@app.route('/purchased', methods=['GET'])
+def get_purchases():
+    purchase = Purchased.query.all()
+    purchase = list(
+        map(lambda index: index.serialize(), purchase)
+    )
+    response_body= jsonify(purchase)
+    return response_body, 200
+        
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
+

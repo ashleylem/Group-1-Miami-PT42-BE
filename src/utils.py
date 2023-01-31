@@ -1,5 +1,11 @@
 from flask import jsonify, url_for
 
+ALLOWED_EXTENSIONS=['png', 'jpg', 'jpeg', 'mp4']
+
+def file_valid(filename):
+    return '.' in filename and \
+        filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
+
 class APIException(Exception):
     status_code = 400
 
