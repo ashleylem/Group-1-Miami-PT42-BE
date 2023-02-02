@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS, cross_origin
 from utils import APIException, generate_sitemap, file_valid
 from admin import setup_admin
-from models import db, User, Wishlist,VideoUploads, Purchased, Cart
+from models import db, User, Wishlist,VideoUploads, Purchased, Cart, Products
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from  werkzeug.security import generate_password_hash, check_password_hash
 import uuid
@@ -21,6 +21,8 @@ app.url_map.strict_slashes = False
 UPLOADS_FOLDER= 'src/Uploads'
 app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
 
+PRODUCTS_FOLDER= 'src/Products'
+app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -297,6 +299,41 @@ def get_purchases():
     )
     response_body= jsonify(purchase)
     return response_body, 200
+
+@app.route('/products', methods=['POST'])
+def add_products():
+    user_id=request.form.get('userId')
+    product_id=uuid.uuid4()
+    name=request.form.get('name')
+    description=request.form.get('description')
+    price=request.form.get('price')
+    
+
+    if 'file' not in request.files:
+        flash('No file part in request')
+        
+    image =request.files.getlist('file')
+    
+    image_paths = []
+    image_filenames = []
+
+    for image in images:
+        if file_valid(file.filename):
+            filename=secure_filename(image.filename)
+            image.save(os.path.join(app.config['PRODUCTS_FOLDER'], filename))
+            path = os.path.join(app.config['PRODUCTS_FOLDER'], filename)
+            image_paths.append(path)
+            image_filenames.append(filename)
+
+    image_path_str = ','.join(image_paths)
+    image_filenames_str= ','.join(image_filenames)
+    newProduct= Products(user_id=user_id, item_name=name, item_description=description, image_path=image_path_str, filename=image_filenames_str )
+
+    db.session.add(newProduct)
+    db.session.commit() 
+   
+    return "successfully added"
+    
         
 
 # this only runs if `$ python src/app.py` is executed
