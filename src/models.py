@@ -133,8 +133,8 @@ class Products(db.Model):
     item_description=db.Column(db.String(500), nullable=False)
     image_path= db.Column(db.String(500), nullable=False)
     filename=db.Column(db.String(500), nullable=False) 
-
-
+    category_id= db.Column(db.Integer, nullable=False)
+    subcategory_id= db.Column(db.Integer, nullable=False)
 
     user = db.relationship("User")
     
@@ -148,5 +148,7 @@ class Products(db.Model):
             "name": self.item_name,
             "price": self.item_price,
             "description": self.item_description,
-            "filename": self.filename
+            "filename": self.filename,
+            "category_id": self.category_id,
+            "subcategory_id": self.subcategory_id
         }

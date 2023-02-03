@@ -29,8 +29,6 @@ history="flask db history"
 heads="flask db heads"
 merge = "flask db merge heads"
 start="flask run -p 3000 -h 0.0.0.0"
-merge = "flask db merge heads"
-
 init="flask db init"
 migrate="flask db migrate"
 upgrade="flask db upgrade"
