@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS, cross_origin
 from utils import APIException, generate_sitemap, file_valid
 from admin import setup_admin
-from models import db, User, Wishlist,VideoUploads, Purchased, Cart
+from models import db, User, Wishlist,VideoUploads, Purchased, Cart, Products
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from  werkzeug.security import generate_password_hash, check_password_hash
 import uuid
@@ -21,6 +21,8 @@ app.url_map.strict_slashes = False
 UPLOADS_FOLDER= 'src/Uploads'
 app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
 
+PRODUCTS_FOLDER= 'src/Products'
+app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -211,7 +213,8 @@ def get_user_videos(video_id):
 
     return send_from_directory(path, filename, mimetype='video/mp4'), 200
 
-    
+
+
 
 @app.route('/videos/delete', methods=['DELETE'])
 def delete_video():
@@ -297,7 +300,79 @@ def get_purchases():
     )
     response_body= jsonify(purchase)
     return response_body, 200
+
+@app.route('/products', methods=['POST'])
+def add_products():
+    user_id=request.form.get('userId')
+    product_id=uuid.uuid4()
+    name=request.form.get('name')
+    description=request.form.get('description')
+    price=request.form.get('price')
+    category_id=request.form.get('category_id')
+    subcategory_id=request.form.get('subcategory_id')
+
+    if 'file' not in request.files:
+        flash('No file part in request')
         
+    images =request.files.getlist('file')
+    
+    image_paths = []
+    image_filenames = []
+
+    for image in images:
+        if file_valid(image.filename):
+            filename=secure_filename(image.filename)
+            image.save(os.path.join(app.config['PRODUCTS_FOLDER'], filename))
+            path = os.path.join(app.config['PRODUCTS_FOLDER'], filename)
+            image_paths.append(path)
+            image_filenames.append(filename)
+
+    image_path_str = ','.join(image_paths)
+    image_filenames_str= ','.join(image_filenames)
+    newProduct= Products(user_id=user_id, item_price=price, item_name=name, item_description=description, image_path=image_path_str, filename=image_filenames_str, subcategory_id=subcategory_id, category_id=category_id )
+
+    db.session.add(newProduct)
+    db.session.commit() 
+   
+    return "successfully added"
+
+@app.route('/products', methods=['GET'])
+def get_products():
+    products= Products.query.all()
+    productsInfo= list(
+        map(lambda item: item.serialize(), products)
+    )
+
+    response_body=jsonify(productsInfo)
+    return response_body, 200 
+
+@app.route('/products/<user_id>', methods=['GET'])
+def get_user_products(user_id):
+    products= Products.query.filter_by(user_id=user_id).all()
+    product_data = []
+    for product in products:
+        product_data.append({
+            'id': product.product_id,
+            'name': product.item_name,
+            'description': product.item_description,
+            'price': product.item_price,
+            'image_paths': product.image_path.split(',')
+        })
+    return jsonify({'products': product_data})
+    
+@app.route('/images/<path:path>')
+def send_image(path):
+    return send_from_directory('/workspace/Group-1-Miami-PT42-BE/', path)
+
+@app.route('/products/delete', methods=['DELETE'])
+def delete_images():
+    products=Products.query.all()
+    for product in products:
+        db.session.delete(product)
+        for image in  product.filename.split(','):
+            os.remove(os.path.join(app.config['PRODUCTS_FOLDER'], image))
+    db.session.commit()
+    return "deleted"
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':

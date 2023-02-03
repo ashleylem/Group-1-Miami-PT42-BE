@@ -123,3 +123,32 @@ class Purchased(db.Model):
             "description": self.item_description,
             "picture": self.picture_url
         }
+
+class Products(db.Model):
+    __tablename__= "Products" 
+    user_id= db.Column(db.String(130), db.ForeignKey(User.id), nullable=False)
+    product_id=db.Column(db.Integer, primary_key=True, nullable=False)
+    item_name= db.Column(db.String(500), nullable=False)
+    item_price= db.Column(db.Integer, nullable=False)
+    item_description=db.Column(db.String(500), nullable=False)
+    image_path= db.Column(db.String(500), nullable=False)
+    filename=db.Column(db.String(500), nullable=False) 
+    category_id= db.Column(db.Integer, nullable=False)
+    subcategory_id= db.Column(db.Integer, nullable=False)
+
+    user = db.relationship("User")
+    
+    def __repr__(self):
+        return "<Products(id='%s')% self.id>"
+    
+    def serialize(self):
+        return{
+            "userId":self.user_id,
+            "product_id": self.product_id,
+            "name": self.item_name,
+            "price": self.item_price,
+            "description": self.item_description,
+            "filename": self.filename,
+            "category_id": self.category_id,
+            "subcategory_id": self.subcategory_id
+        }
