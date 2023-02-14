@@ -9,6 +9,11 @@ class User(db.Model):
     username= db.Column(db.String(120), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
+    profile_picture_path= db.Column(db.String(500), nullable=True)
+    picture_filename=db.Column(db.String(500), nullable=True)
+    followers=db.Column(db.Integer, nullable=True)
+    following=db.Column(db.Integer, nullable=True)
+    review_points=db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -19,6 +24,12 @@ class User(db.Model):
             "username": self.username,
             "name": self.name,
             "email": self.email,
+            "profile_pic": self.profile_picture_path,
+            "followers": self.followers,
+            "following": self.following,
+            "points":self.review_points,
+            "filename": self.picture_filename
+
             # do not serialize the password, its a security breach
         }
         
@@ -127,14 +138,18 @@ class Purchased(db.Model):
 class Products(db.Model):
     __tablename__= "Products" 
     user_id= db.Column(db.String(130), db.ForeignKey(User.id), nullable=False)
+    seller_name=db.Column(db.String(130), nullable=True)
     product_id=db.Column(db.Integer, primary_key=True, nullable=False)
     item_name= db.Column(db.String(500), nullable=False)
     item_price= db.Column(db.Integer, nullable=False)
     item_description=db.Column(db.String(500), nullable=False)
     image_path= db.Column(db.String(500), nullable=False)
     filename=db.Column(db.String(500), nullable=False) 
-    category_id= db.Column(db.Integer, nullable=False)
-    subcategory_id= db.Column(db.Integer, nullable=False)
+    category_name= db.Column(db.String(500), nullable=False)
+    subcategory_name= db.Column(db.String(500), nullable=False)
+    product_details=db.Column(db.String(500), nullable=True) 
+    sizes=db.Column(db.String(120), nullable=True) 
+    shipping_info=db.Column(db.String(500), nullable=True) 
 
     user = db.relationship("User")
     
@@ -149,6 +164,33 @@ class Products(db.Model):
             "price": self.item_price,
             "description": self.item_description,
             "filename": self.filename,
-            "category_id": self.category_id,
-            "subcategory_id": self.subcategory_id
+            "category_name": self.category_name,
+            "subcategory_name": self.subcategory_name,
+            "sizes":self.sizes,
+            "shipping_info": self.shipping_info,
+            "product_details": self.product_details,
+            "seller_name":self.seller_name
+
         }
+class Sales(db.Model):
+    __tablename__= "Sales" 
+    sale_id=db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id= db.Column(db.String(130), db.ForeignKey(User.id), nullable=False)
+    product_id= db.Column(db.Integer, db.ForeignKey(Products.product_id), nullable=False)
+    buyer_name=db.Column(db.String(120), nullable=False) 
+    buyer_shipping=db.Column(db.String(120), nullable=False)
+    fullfilment_status= db.column(db.Boolean) 
+
+    def __repr__(self):
+        return "<Sales(id='%s')% self.id>"
+    
+    def serialize(self):
+        return{
+            "sale_id":self.sale_id,
+            "userId":self.user_id,
+            "product_id": self.product_id,
+            "buyer_shipping": self.buyer_shipping,
+            "fullfilment_status": self.fullfilment_status,
+            "buyer_name":self.buyer_name
+        }
+
