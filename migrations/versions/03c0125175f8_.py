@@ -26,7 +26,6 @@ def upgrade():
     sa.Column('video_description', sa.String(length=500), nullable=False),
     sa.Column('picture_url', sa.String(length=500), nullable=False),
     sa.Column('video_path', sa.String(length=500), nullable=False),
-    sa.ForeignKeyConstraint(['product_id'], ['Wishlist.product_id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['User.id'], ),
     sa.PrimaryKeyConstraint('video_id')
     )
