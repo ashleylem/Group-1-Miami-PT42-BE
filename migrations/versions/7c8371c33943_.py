@@ -24,11 +24,7 @@ def upgrade():
                type_=sa.String(length=130),
                existing_nullable=False,
                existing_server_default=sa.text('nextval(\'"User_id_seq"\'::regclass)'))
-        batch_op.drop_constraint('User_first_name_key', type_='unique')
-        batch_op.drop_constraint('User_last_name_key', type_='unique')
-        batch_op.drop_column('last_name')
-        batch_op.drop_column('first_name')
-
+               
     # ### end Alembic commands ###
 
 
