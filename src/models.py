@@ -42,7 +42,6 @@ class Wishlist(db.Model):
     item_description=db.Column(db.String(500), nullable=False)
     picture_url= db.Column(db.String(500), nullable=False)
 
-    user = db.relationship("User")
     
     def __repr__(self):
         return "<Wishlist(id='%s')% self.id>"
@@ -95,8 +94,6 @@ class Cart(db.Model):
     item_price= db.Column(db.Integer, nullable=False)
     item_description=db.Column(db.String(500), nullable=False)
     picture_url= db.Column(db.String(500), nullable=False)
-
-    user = db.relationship("User")
     
     def __repr__(self):
         return "<Cart(id='%s')% self.id>"
@@ -120,7 +117,6 @@ class Purchased(db.Model):
     item_description=db.Column(db.String(500), nullable=False)
     picture_url= db.Column(db.String(500), nullable=False)
 
-    user = db.relationship("User")
     
     def __repr__(self):
         return "<Wishlist(id='%s')% self.id>"
@@ -151,7 +147,6 @@ class Products(db.Model):
     sizes=db.Column(db.String(120), nullable=True) 
     shipping_info=db.Column(db.String(500), nullable=True) 
 
-    user = db.relationship("User")
     
     def __repr__(self):
         return "<Products(id='%s')% self.id>"
