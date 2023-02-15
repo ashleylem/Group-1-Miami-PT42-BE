@@ -5,6 +5,6 @@ database.db
 diagram.png
 public/*
 dist/*
-
+package.json
 
 __pycache__/
