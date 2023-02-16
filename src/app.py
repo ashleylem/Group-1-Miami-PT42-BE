@@ -460,6 +460,7 @@ def get_user_products(user_id):
             'name': product.item_name,
             'description': product.item_description,
             'price': product.item_price,
+            'filename': product.filename.split(','),
             'image_paths': product.image_path.split(','),
             'category': product.category_name,
             'subcategory':product.subcategory_name,
