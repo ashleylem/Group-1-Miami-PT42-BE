@@ -26,7 +26,6 @@ app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
 PROFILEPICS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'ProfilePics'))
 app.config['PROFILEPICS_FOLDER']= PROFILEPICS_FOLDER
-print(app.config['PROFILEPICS_FOLDER'])
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -55,6 +54,7 @@ def sitemap():
 
 @app.route('/users', methods=['GET'])
 def get_all_users():
+    print(app.config['PROFILEPICS_FOLDER'])
     users= User.query.all()
     users= list(
         map(lambda index: index.serialize(), users)
@@ -74,6 +74,7 @@ def get_user_info(user_id):
 
 @app.route('/users', methods=['DELETE'])
 def delete_user():
+    
     users = User.query.all()
     for user in users:
         db.session.delete(user)
@@ -97,9 +98,10 @@ def add_profile_pic(user_id):
         db.session.commit()
     return "successfully added"
 
-@app.route('/profile/picture/<path:path>')
-def send_profile_image(path):
-    return send_from_directory("/opt/render/project/src/src/ProfilePics", path)
+@app.route('/profile/picture/<filename>')
+def send_profile_image(filename):
+
+    return send_from_directory("/opt/render/project/src/src/ProfilePics", filename)
 
 @app.route('/profile/picture/replace/<user_id>', methods=["POST"])
 def replace_profile_pic(user_id):
@@ -269,9 +271,9 @@ def get_user_videos(video_id):
 
     return send_from_directory(path, filename, mimetype='video/mp4'), 200
 
-@app.route('/videos/<path:path>')
-def send_video(path):
-    return send_from_directory(app.config['UPLOADS_FOLDER'], path)
+@app.route('/videos/<filename>')
+def send_video(filename):
+    return send_from_directory('/opt/render/project/src/src/Uploads', filename)
 
 
 @app.route('/videos/delete', methods=['DELETE'])
@@ -476,7 +478,7 @@ def send_image(path):
 
 @app.route('/product/images/<filename>', methods=["GET"])
 def send_product_image(filename):
-    return send_from_directory(app.config['PRODUCTS_FOLDER'], filename)
+    return send_from_directory('/opt/render/project/src/src/Products', filename)
 
 @app.route('/products/<int:product_id>', methods=["GET"])
 def get_product_info(product_id):
