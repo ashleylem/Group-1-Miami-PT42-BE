@@ -18,13 +18,13 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
-UPLOADS_FOLDER= 'src/Uploads'
+UPLOADS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'Uploads'))
 app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
 
-PRODUCTS_FOLDER= 'src/Products'
+PRODUCTS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'Products'))
 app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
-PROFILEPICS_FOLDER= 'src/ProfilePics'
+PROFILEPICS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'ProfilePics'))
 app.config['PROFILEPICS_FOLDER']= PROFILEPICS_FOLDER
 
 
