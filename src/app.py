@@ -26,7 +26,7 @@ app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
 PROFILEPICS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'ProfilePics'))
 app.config['PROFILEPICS_FOLDER']= PROFILEPICS_FOLDER
-print(app.config['PROFILEPICS'])
+print(app.config['PROFILEPICS_FOLDER'])
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
