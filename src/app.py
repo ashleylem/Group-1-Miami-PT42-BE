@@ -99,7 +99,7 @@ def add_profile_pic(user_id):
 
 @app.route('/profile/picture/<path:path>')
 def send_profile_image(path):
-    return send_from_directory('/workspace/Group-1-Miami-PT42-BE/src/ProfilePics', path)
+    return send_from_directory('PROFILEPICS_FOLDER', path)
 
 @app.route('/profile/picture/replace/<user_id>', methods=["POST"])
 def replace_profile_pic(user_id):
@@ -271,7 +271,7 @@ def get_user_videos(video_id):
 
 @app.route('/videos/<path:path>')
 def send_video(path):
-    return send_from_directory('/workspace/Group-1-Miami-PT42-BE/src/Uploads', path)
+    return send_from_directory('UPLOADS_FOLDER', path)
 
 
 @app.route('/videos/delete', methods=['DELETE'])
@@ -475,7 +475,7 @@ def send_image(path):
 
 @app.route('/product/images/<filename>', methods=["GET"])
 def send_product_image(filename):
-    return send_from_directory('/workspace/Group-1-Miami-PT42-BE/src/Products', filename)
+    return send_from_directory('PRODUCTS_FOLDER', filename)
 
 @app.route('/products/<int:product_id>', methods=["GET"])
 def get_product_info(product_id):
