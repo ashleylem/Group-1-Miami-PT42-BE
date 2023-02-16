@@ -26,7 +26,7 @@ app.config['PRODUCTS_FOLDER']= PRODUCTS_FOLDER
 
 PROFILEPICS_FOLDER=  os.path.abspath(os.path.join(os.path.dirname(__file__), 'ProfilePics'))
 app.config['PROFILEPICS_FOLDER']= PROFILEPICS_FOLDER
-
+print(app.config['PROFILEPICS'])
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -99,7 +99,7 @@ def add_profile_pic(user_id):
 
 @app.route('/profile/picture/<path:path>')
 def send_profile_image(path):
-    return send_from_directory(app.config['PROFILEPICS_FOLDER'], path)
+    return send_from_directory("/opt/render/project/src/src/ProfilePics", path)
 
 @app.route('/profile/picture/replace/<user_id>', methods=["POST"])
 def replace_profile_pic(user_id):
